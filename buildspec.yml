@@ -2,26 +2,12 @@ version: 0.2
 
 phases:
   install:
-    runtime-versions:
-      nodejs: latest
     commands:
-      - echo "Installing dependencies..."
       - npm install
-
   build:
     commands:
-      - echo "Building the React app with Vite..."
-      - npm run build
-
-  post_build:
-    commands:
-      - echo "Syncing build files to S3..."
-      - aws s3 sync dist/ s3://auth-registration-bucket --delete
-      - echo "Invalidating CloudFront cache..."
-      - aws cloudfront create-invalidation --distribution-id E388W75PDVC0ZE --paths "/*"
-
+      - npm run build  # Builds the project
 artifacts:
   files:
-    - "**/*"
-  base-directory: dist
-  discard-paths: no
+    - '**/*'
+  base-directory: build  # Directory with output files (e.g., React app)
