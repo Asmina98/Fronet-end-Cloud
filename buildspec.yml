@@ -6,7 +6,7 @@ phases:
       - npm install
   build:
     commands:
-      - npm run dev 
+      - npm run build
       post_build:
       commands:
       - aws s3 cp --recursive ./build s3://auth-registration-bucket
