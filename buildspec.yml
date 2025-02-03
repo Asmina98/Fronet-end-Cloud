@@ -9,7 +9,7 @@ phases:
       - npm run dev 
       post_build:
       commands:
-      - aws s3 cp --recursive ./build s3://www.oncloudconsulting/
+      - aws s3 cp --recursive ./build s3://auth-registration-bucket
       - aws cloudfront create-invalidation --distribution-id E388W75PDVC0ZE --path /\*
 artifacts:
   files:
