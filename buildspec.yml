@@ -3,6 +3,7 @@ version: 0.2
 phases:
   install:
     commands:
+<<<<<<< HEAD
       - echo "Installing dependencies..."
       - npm install  # Example for a Node.js app
   build:
@@ -17,3 +18,13 @@ artifacts:
   files:
     - '**/*'
   discard-paths: no
+=======
+      - npm install
+  build:
+    commands:
+      - npm run build  # Builds the project
+artifacts:
+  files:
+    - '**/*'
+  base-directory: build  # Directory with output files (e.g., React app)
+>>>>>>> 37c5cce3e04da197304a237b570a509db1d86e87
