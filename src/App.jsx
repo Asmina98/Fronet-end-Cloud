@@ -1,81 +1,82 @@
-import { BrowserRouter, Router, Routes } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, NavLink } from 'react-router-dom';
 import './App.css';
-import { NavLink, Route } from 'react-router-dom';
 import Home from './assets/Home';
 import Register from './Register';
 import Login from './Login';
 import PremiumContent from './PremiumContent';
 import PublicRoute from './Routes/publicRoute';
 import PrivateRoute from './Routes/privateRoute';
-import {React ,useEffect, useState} from "react";
+import { useEffect, useState } from "react";
 import { getEmail, getToken, setEMailSession, resetEmailSession } from './Service/AuthService';
 import axios from 'axios';
+
 const verifyTokenAPIURL = 'https://nk31ys9nm4.execute-api.us-east-1.amazonaws.com/prod/verify';
 
 function App() {
   const [isAuthenticating, setAuthenticating] = useState(true);
+  const [profilePic, setProfilePic] = useState("");
 
-  useEffect(()=>{
+  useEffect(() => {
+    let isMounted = true; // To prevent state updates on unmounted component
     const token = getToken();
-    if(token === 'undefined' || token === undefined || token === null || !token){
+    console.log("Token:", token);
+
+    if (!token) {
+      if (isMounted) setAuthenticating(false);
       return;
     }
+
     const requestConfig = {
-      headers : {
-        'x-api-key': "yoD8pwVkAZ8y6vcrU7y1B2Nb829AGg8g9DKixZqB"
-      }
-    }
-    const requestBody = {
-      email : getEmail(),
-      token : token
-    }
-    axios.post(verifyTokenAPIURL,requestBody,requestConfig).then( response =>{
-      setEMailSession(response.data.user, response.data.token);
-      setAuthenticating(false);
-    }).catch(()=>{
-      resetEmailSession();
-      setAuthenticating(false);
-    })
+      headers: { 'x-api-key': "yoD8pwVkAZ8y6vcrU7y1B2Nb829AGg8g9DKixZqB" }
+    };
+    const requestBody = { email: getEmail(), token };
+
+    axios.post(verifyTokenAPIURL, requestBody, requestConfig)
+      .then(response => {
+        if (isMounted) {
+          setEMailSession(response.data.user, response.data.token);
+          sessionStorage.setItem("profilePic", response.data.user.imageUrl);
+          setProfilePic(response.data.user.imageUrl);
+          setAuthenticating(false);
+        }
+      })
+      .catch((error) => {
+        console.error("Error during authentication", error);
+        if (isMounted) {
+          resetEmailSession();
+          setAuthenticating(false);
+        }
+      });
+
+    return () => { isMounted = false; }; // Cleanup function to avoid memory leaks
   }, []);
 
-  const token = getToken();
-  if(isAuthenticating && token){
-    return <div className='content'>Authenticating...</div>
+  if (isAuthenticating) {
+    return <div className="content">Authenticating...</div>;
   }
 
   return (
     <div className="App">
       <BrowserRouter>
         <div className="Header">
-          <NavLink to="/" className={({ isActive }) => (isActive ? 'active' : '')}>
-            Home
-          </NavLink>
-          <NavLink to="/register" className={({ isActive }) => (isActive ? 'active' : '')}>
-            Register
-          </NavLink>
-          <NavLink to="/login" className={({ isActive }) => (isActive ? 'active' : '')}>
-            Login
-          </NavLink>
-          <NavLink to="/premium-content" className={({ isActive }) => (isActive ? 'active' : '')}>
-            Premium Content
-          </NavLink>
+          {profilePic && (
+            <img src={profilePic} alt="Profile" style={{ width: "40px", height: "40px", borderRadius: "50%", marginRight: "10px" }} />
+          )}
+          <NavLink to="/">Home</NavLink>
+          <NavLink to="/register">Register</NavLink>
+          <NavLink to="/login">Login</NavLink>
+          <NavLink to="/premium-content">Premium Content</NavLink>
         </div>
-        <div className="content">
-          
         <Routes>
-          {/* Public Routes */}
           <Route element={<PublicRoute />}>
-          <Route path="/" element={<Home />} />
-          <Route path="/register" element={<Register />} />
-          <Route path="/login" element={<Login />} />
+            <Route path="/" element={<Home />} />
+            <Route path="/register" element={<Register />} />
+            <Route path="/login" element={<Login />} />
           </Route>
-          {/* Private Routes */}
-        <Route element={<PrivateRoute />}>
-          <Route path="/premium-content" element={<PremiumContent  />} />
-        </Route>
+          <Route element={<PrivateRoute />}>
+            <Route path="/premium-content" element={<PremiumContent />} />
+          </Route>
         </Routes>
-          
-        </div>
       </BrowserRouter>
     </div>
   );
